@@ -31,9 +31,7 @@ To use the Music Metadata and Lyrics Fetcher, follow these steps:
 1. Open your terminal.
 2. Navigate to the project directory.
 3. Write the file path where your audio files in to __dirname constant
-4. Run the script using Deno:
-5.  `deno task start`
-6.  Make sure to grant the necessary permissions for file reading and network access.
+4. Run the script using Deno: `deno task start`
 
 ## Contributing
 
@@ -51,7 +49,7 @@ This project is licensed under the GPL-3.0 - see the LICENSE file for details.
 
 ## Contact
 
-If you have any questions or suggestions, please open an issue on the GitHub repository.
+If you have any questions or suggestions, please open an issue on the GitHub repository or contact me on [telegram](https://t.me/sametc0)
 
 ## Acknowledgments
 
