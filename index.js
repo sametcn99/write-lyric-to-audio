@@ -1,20 +1,20 @@
-import { parseFile } from "npm:music-metadata";
-import { getLyrics } from "npm:genius-lyrics-api";
-import ffmetadata from "npm:ffmetadata";
+import { readdirSync, readFileSync } from "fs";
+import { parseBuffer } from "music-metadata";
+import { getLyrics } from "genius-lyrics-api";
+import ffmetadata from "ffmetadata";
+import readline from "readline";
 
 /**
- * Retrieves an array of `Deno.DirEntry` objects representing the FLAC files in the specified directory.
+ * Retrieves an array of file names representing the FLAC files in the specified directory.
  * Only files with the extensions ".flac" or ".mp3" will be included in the result.
  *
  * @param directory - The directory path to search for FLAC files.
- * @returns An array of `Deno.DirEntry` objects representing the FLAC files found in the directory.
+ * @returns An array of file names representing the FLAC files found in the directory.
  */
-function getFlacFiles(directory: string): Deno.DirEntry[] {
+function getFlacFiles(directory) {
   try {
-    const files = Array.from(Deno.readDirSync(directory)).filter(
-      (file) =>
-        file.isFile &&
-        (file.name.endsWith(".flac") || file.name.endsWith(".mp3"))
+    const files = readdirSync(directory).filter(
+      (file) => file.endsWith(".flac") || file.endsWith(".mp3")
     );
     return files;
   } catch (error) {
@@ -24,15 +24,35 @@ function getFlacFiles(directory: string): Deno.DirEntry[] {
 }
 
 /**
+ * Prompts the user for input and returns the input as a string.
+ *
+ * @param query - The prompt message to display to the user.
+ * @returns A promise that resolves to the user's input.
+ */
+function prompt(query) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) =>
+    rl.question(query, (ans) => {
+      rl.close();
+      resolve(ans);
+    })
+  );
+}
+
+/**
  * Main function that processes FLAC files, retrieves lyrics, and writes them to the audio metadata.
  * @returns {Promise<void>} A promise that resolves when all the processing is complete.
  */
 async function main() {
-  let apiKey: string | null = null;
+  let apiKey = null;
   let isValidAPIKey = false;
 
   while (!isValidAPIKey) {
-    apiKey = prompt("Please enter your Genius API key:");
+    apiKey = await prompt("Please enter your Genius API key:");
     if (!apiKey) {
       console.error("API key is required.");
       continue;
@@ -54,7 +74,7 @@ async function main() {
     }
   }
 
-  const directory = prompt("Please enter the directory path:") || "";
+  const directory = (await prompt("Please enter the directory path:")) || "";
   if (!directory) {
     console.error("Directory path is required.");
     return;
@@ -64,13 +84,14 @@ async function main() {
 
   for (const file of files) {
     try {
-      const metadata = await parseFile(`${directory}/${file.name}`);
+      const fileBlob = readFileSync(`${directory}/${file}`);
+      const metadata = await parseBuffer(fileBlob);
       const title = metadata.common?.title;
       const artist = metadata.common?.artist;
 
       if (!title || !artist) {
         console.log(
-          `Skipping ${file.name} due to missing title or artist metadata.`
+          `Skipping ${file} due to missing title or artist metadata.`
         );
         continue;
       }
@@ -80,9 +101,9 @@ async function main() {
         metadata.common.lyrics = [];
         metadata.common.lyrics.push(lyrics);
         ffmetadata.write(
-          `${directory}/${file.name}`,
+          `${directory}/${file}`,
           metadata.common,
-          function (err: Error | null) {
+          function (err) {
             if (err) {
               if (err.message.includes("Permission denied")) {
                 console.error(
@@ -97,17 +118,17 @@ async function main() {
           }
         );
 
-        console.log(`Lyrics added to ${file.name}`);
+        console.log(`Lyrics added to ${file}`);
       } else {
-        console.log(`No lyrics found for ${file.name}`);
+        console.log(`No lyrics found for ${file}`);
       }
     } catch (error) {
       if (error.message.includes("Permission denied")) {
         console.error(
-          `Error processing file ${file.name}: Permission denied. Please check file permissions.`
+          `Error processing file ${file}: Permission denied. Please check file permissions.`
         );
       } else {
-        console.error(`Error processing file ${file.name}:`, error);
+        console.error(`Error processing file ${file}:`, error);
       }
     }
   }

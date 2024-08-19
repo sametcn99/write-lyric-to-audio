@@ -1,6 +1,6 @@
 # Music Metadata and Lyrics Fetcher
 
-This project is designed to fetch and display metadata for audio files, specifically focusing on `.flac` and `.mp3` formats. It also integrates with the Genius API to retrieve lyrics for the songs based on the metadata obtained. The project utilizes Deno for runtime and leverages various npm packages for metadata parsing and lyrics fetching.
+This project is designed to fetch and display metadata for audio files, specifically focusing on `.flac` and `.mp3` formats. It also integrates with the Genius API to retrieve lyrics for the songs based on the metadata obtained.
 
 ## Features
 
@@ -12,26 +12,13 @@ This project is designed to fetch and display metadata for audio files, specific
 
 Before you begin, ensure you have met the following requirements:
 
-- Deno installed on your system.
 - A Genius API key, which you can obtain by creating an account on the [Genius API website](https://genius.com/developers).
 
 ## Installation and Setup
 
 1. Clone the repository to your local machine.
 2. Navigate to the project directory.
-3. Create a `.env` file in the root of the project directory.
-4. Add your Genius API key to the `.env` file as follows:
-   `GENIUS_API_KEY="your_genius_api_key_here"`
-5. Ensure you have Deno installed and set up on your system.
-
-## Usage
-
-To use the Music Metadata and Lyrics Fetcher, follow these steps:
-
-1. Open your terminal.
-2. Navigate to the project directory.
-3. Write the file path where your audio files in to __dirname constant
-4. Run the script using Deno: `deno task start`
+3. Run `npm i` and after run `npm run start`
 
 ## Contributing
 

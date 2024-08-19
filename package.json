@@ -1,0 +1,37 @@
+{
+  "name": "write-lyric-to-audio",
+  "version": "1.0.0",
+  "description": "write lyrics metadata from genius to audio files",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sametcn99/write-lyric-to-audio.git"
+  },
+  "author": "sametcn99",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sametcn99/write-lyric-to-audio/issues"
+  },
+  "homepage": "https://github.com/sametcn99/write-lyric-to-audio#readme",
+  "licenses": [
+    {
+      "type": "GPL-3.0-only",
+      "url": "https://www.gnu.org/licenses/gpl-3.0.html"
+    }
+  ],
+  "devDependencies": {
+    "@types/node": "^22.4.1",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "ffmetadata": "^1.7.0",
+    "fs": "^0.0.1-security",
+    "genius-lyrics-api": "^3.2.1",
+    "music-metadata": "^10.2.0",
+    "readline": "^1.3.0"
+  }
+}
