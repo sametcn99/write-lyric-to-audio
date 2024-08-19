@@ -1,18 +1,6 @@
 import { parseFile } from "npm:music-metadata";
 import { getLyrics } from "npm:genius-lyrics-api";
 import ffmetadata from "npm:ffmetadata";
-import { load } from "https://deno.land/std@0.224.0/dotenv/mod.ts";
-
-const env = await load();
-const __dirname = "your directory path here"; // e.g. "C:\\Users\\user\\Music\\my-music-folder";
-
-/**
- * The API key used for accessing the Genius API.
- */
-const apiKey = env["GENIUS_API_KEY"];
-if (!apiKey) {
-  console.error("GENIUS_API_KEY environment variable is not set.");
-}
 
 /**
  * Retrieves an array of `Deno.DirEntry` objects representing the FLAC files in the specified directory.
@@ -24,7 +12,9 @@ if (!apiKey) {
 function getFlacFiles(directory: string): Deno.DirEntry[] {
   try {
     const files = Array.from(Deno.readDirSync(directory)).filter(
-      (file) => file.isFile && file.name.endsWith(".flac" || ".mp3")
+      (file) =>
+        file.isFile &&
+        (file.name.endsWith(".flac") || file.name.endsWith(".mp3"))
     );
     return files;
   } catch (error) {
@@ -38,25 +28,98 @@ function getFlacFiles(directory: string): Deno.DirEntry[] {
  * @returns {Promise<void>} A promise that resolves when all the processing is complete.
  */
 async function main() {
-  const files = getFlacFiles(__dirname);
-  const promises = files.map(async (file) => {
-    const filePath = `${__dirname}\\${file.name}`;
-    const metadata = await parseFile(`${filePath}`);
-    const options = {
-      apiKey: apiKey,
-      title: metadata.common.title,
-      artist: metadata.common.artist,
-      optimizeQuery: true,
-    };
-    const lyrics = await getLyrics(options);
-    metadata.common.lyrics = [];
-    metadata.common.lyrics.push(lyrics);
-    ffmetadata.write(filePath, metadata.common, function (err: Error | null) {
-      if (err) console.error("Error writing metadata:", err);
-      else console.log("Data written");
-    });
-  });
-  await Promise.all(promises);
+  let apiKey: string | null = null;
+  let isValidAPIKey = false;
+
+  while (!isValidAPIKey) {
+    apiKey = prompt("Please enter your Genius API key:");
+    if (!apiKey) {
+      console.error("API key is required.");
+      continue;
+    }
+
+    try {
+      const validateAPIKey = await getLyrics({
+        apiKey,
+        title: "test",
+        artist: "test",
+      });
+      if (validateAPIKey) {
+        isValidAPIKey = true;
+      } else {
+        console.error("Invalid API key. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error validating API key:", error);
+    }
+  }
+
+  const directory = prompt("Please enter the directory path:") || "";
+  if (!directory) {
+    console.error("Directory path is required.");
+    return;
+  }
+
+  const files = getFlacFiles(directory);
+
+  for (const file of files) {
+    try {
+      const metadata = await parseFile(`${directory}/${file.name}`);
+      const title = metadata.common?.title;
+      const artist = metadata.common?.artist;
+
+      if (!title || !artist) {
+        console.log(
+          `Skipping ${file.name} due to missing title or artist metadata.`
+        );
+        continue;
+      }
+
+      const lyrics = await getLyrics({ apiKey, title, artist });
+      if (lyrics) {
+        metadata.common.lyrics = [];
+        metadata.common.lyrics.push(lyrics);
+        ffmetadata.write(
+          `${directory}/${file.name}`,
+          metadata.common,
+          function (err: Error | null) {
+            if (err) {
+              if (err.message.includes("Permission denied")) {
+                console.error(
+                  "Error writing metadata: Permission denied. Please check file permissions."
+                );
+              } else {
+                console.error("Error writing metadata:", err);
+              }
+            } else {
+              console.log("Data written");
+            }
+          }
+        );
+
+        console.log(`Lyrics added to ${file.name}`);
+      } else {
+        console.log(`No lyrics found for ${file.name}`);
+      }
+    } catch (error) {
+      if (error.message.includes("Permission denied")) {
+        console.error(
+          `Error processing file ${file.name}: Permission denied. Please check file permissions.`
+        );
+      } else {
+        console.error(`Error processing file ${file.name}:`, error);
+      }
+    }
+  }
 }
 
-main();
+// Call the main function
+main().catch((error) => {
+  if (error.message.includes("Permission denied")) {
+    console.error(
+      "An error occurred: Permission denied. Please check file permissions."
+    );
+  } else {
+    console.error("An error occurred:", error);
+  }
+});

@@ -1,11 +1,11 @@
 {
-    "tasks": {
-        "start": "deno run -A index.ts",
-        "dev": "deno run -A --watch index.ts"
-    },
-    "compilerOptions": {
-        "allowJs": true,
-        "strict": true,
-        "jsx": "react"
-    }
+  "tasks": {
+    "start": "deno run -A index.ts",
+    "dev": "deno run -A --watch index.ts"
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "strict": true,
+    "jsx": "react"
+  }
 }
