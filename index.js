@@ -3,6 +3,7 @@ import { parseBuffer } from "music-metadata";
 import { getLyrics } from "genius-lyrics-api";
 import ffmetadata from "ffmetadata";
 import readline from "readline";
+import ora from "ora";
 
 /**
  * Retrieves an array of file names representing the FLAC files in the specified directory.
@@ -79,6 +80,8 @@ async function main() {
     console.error("Directory path is required.");
     return;
   }
+  const spinner = ora('Writing Lyrics...').start();
+
 
   const files = getFlacFiles(directory);
 
@@ -118,20 +121,21 @@ async function main() {
           }
         );
 
-        console.log(`Lyrics added to ${file}`);
       } else {
-        console.log(`No lyrics found for ${file}`);
+        spinner.fail('No lyrics found for ' + file);
       }
     } catch (error) {
       if (error.message.includes("Permission denied")) {
         console.error(
-          `Error processing file ${file}: Permission denied. Please check file permissions.`
+          ``
         );
+        spinner.fail('Error processing file ${file}: Permission denied. Please check file permissions.');
       } else {
-        console.error(`Error processing file ${file}:`, error);
+        spinner.fail('Error processing file ${file}', error);
       }
     }
   }
+  spinner.succeed('Lyrics added to ' + files.length + ' files');
 }
 
 // Call the main function
